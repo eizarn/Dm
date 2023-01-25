@@ -29,30 +29,22 @@ public class GUI extends JPanel implements ActionListener {
 
     ImageIcon mineDisplay_default;
     ImageIcon mineDisplay_mine;
-    ImageIcon mineDisplay_0;
-    ImageIcon mineDisplay_1;
-    ImageIcon mineDisplay_2;
-    ImageIcon mineDisplay_3;
-    ImageIcon mineDisplay_4;
-    ImageIcon mineDisplay_5;
-    ImageIcon mineDisplay_6;
-    ImageIcon mineDisplay_7;
-    ImageIcon mineDisplay_8;
+    ImageIcon [] mineDisplay = new ImageIcon [9];
 
     GUI(Champ champ) {
         // MineDisplay icons
         try {
             this.mineDisplay_default = new ImageIcon(ImageIO.read(new File("img/default.bmp")));
             this.mineDisplay_mine = new ImageIcon(ImageIO.read(new File("img/mine.bmp")));
-            this.mineDisplay_0 = new ImageIcon(ImageIO.read(new File("img/0.bmp")));
-            this.mineDisplay_1 = new ImageIcon(ImageIO.read(new File("img/1.bmp")));
-            this.mineDisplay_2 = new ImageIcon(ImageIO.read(new File("img/2.bmp")));
-            this.mineDisplay_3 = new ImageIcon(ImageIO.read(new File("img/3.bmp")));
-            this.mineDisplay_4 = new ImageIcon(ImageIO.read(new File("img/4.bmp")));
-            this.mineDisplay_5 = new ImageIcon(ImageIO.read(new File("img/5.bmp")));
-            this.mineDisplay_6 = new ImageIcon(ImageIO.read(new File("img/6.bmp")));
-            this.mineDisplay_7 = new ImageIcon(ImageIO.read(new File("img/7.bmp")));
-            this.mineDisplay_8 = new ImageIcon(ImageIO.read(new File("img/8.bmp")));
+            this.mineDisplay[0] = new ImageIcon(ImageIO.read(new File("img/0.bmp")));
+            this.mineDisplay[1] = new ImageIcon(ImageIO.read(new File("img/1.bmp")));
+            this.mineDisplay[2] = new ImageIcon(ImageIO.read(new File("img/2.bmp")));
+            this.mineDisplay[3] = new ImageIcon(ImageIO.read(new File("img/3.bmp")));
+            this.mineDisplay[4] = new ImageIcon(ImageIO.read(new File("img/4.bmp")));
+            this.mineDisplay[5] = new ImageIcon(ImageIO.read(new File("img/5.bmp")));
+            this.mineDisplay[6] = new ImageIcon(ImageIO.read(new File("img/6.bmp")));
+            this.mineDisplay[7] = new ImageIcon(ImageIO.read(new File("img/7.bmp")));
+            this.mineDisplay[8] = new ImageIcon(ImageIO.read(new File("img/8.bmp")));
         } catch (Exception ex) {
             System.out.println(ex);
         }
@@ -70,7 +62,7 @@ public class GUI extends JPanel implements ActionListener {
         
         for (int row = 0; row < champ.getHeight(); row++) {
             for (int col = 0; col < champ.getWidth(); col++) {
-                MineDisplay button = new MineDisplay(row, col);
+                MineDisplay button = new MineDisplay(row, col, this);
                 mineDisplays[row][col] = button;
                 grid.add(button);
             }
@@ -128,20 +120,52 @@ public class GUI extends JPanel implements ActionListener {
                 mineDisplay.setIcon(mineDisplay_default);
             }
         }
+        champ.displayMines();
     }
 
     private class MineDisplay extends JLabel {
         private int row, col;
-        GUI gui;
-        MineDisplay(int mineRow, int mineCol) { this("", mineRow, mineCol); }
-        MineDisplay(String text, int mineRow, int mineCol) {
+        private GUI gui;
+        private boolean clicked = false;
+        MineDisplay(int mineRow, int mineCol, GUI gui) { this("", mineRow, mineCol, gui); }
+        MineDisplay(String text, int mineRow, int mineCol, GUI gui) {
             super(text);
             row = mineRow;
             col = mineCol;
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    
+                    MineDisplay me = (MineDisplay) e.getSource();
+                    if (me.clicked == false) {
+                        if (gui.champ.isMine(row, col)) {
+                            setIcon(mineDisplay_mine);
+                            // TODO: game over or sth
+                        }
+                        else {
+                            int [][] coordsToTest = {
+                                {-1, -1},
+                                {-1, 0},
+                                {-1, 1},
+                                {0, -1},
+                                {0, 1},
+                                {1, -1},
+                                {1, 0},
+                                {1, 1}
+                            };
+                            int nMines = 0;
+                            for (int [] coord: coordsToTest) {
+                                try {
+                                    if (gui.champ.isMine(row + coord[0], col + coord[1])) {
+                                        nMines++;
+                                    }
+                                }
+                                catch (Exception ex) {
+                                    // do nothing
+                                }
+                            }
+                            setIcon(mineDisplay[nMines]);
+                        }
+                    }
                 }
             });
         }

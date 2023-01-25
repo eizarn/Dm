@@ -3,7 +3,7 @@ package Stuff;
 import java.util.Random;
 
 public class Champ {
-    final static int N_MINES = 10;
+    final static int N_MINES = 30;
     final static int HEIGHT = 10;
     final static int WIDTH = 10;
     private boolean [][] mines = new boolean[HEIGHT][WIDTH];
