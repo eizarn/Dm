@@ -124,14 +124,11 @@ public class GUI extends JPanel implements ActionListener {
     }
 
     private class MineDisplay extends JLabel {
-        private int row, col;
         private GUI gui;
         private boolean clicked = false;
-        MineDisplay(int mineRow, int mineCol, GUI gui) { this("", mineRow, mineCol, gui); }
-        MineDisplay(String text, int mineRow, int mineCol, GUI gui) {
+        MineDisplay(int row, int col, GUI gui) { this("", row, col, gui); }
+        MineDisplay(String text, int row, int col, GUI gui) {
             super(text);
-            row = mineRow;
-            col = mineCol;
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
