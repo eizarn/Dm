@@ -188,9 +188,9 @@ public class GUI extends JPanel implements ActionListener {
             for (int [] coord: coordsToTest) {
                 try {
                     int nMines = countMines(row + coord[0], col + coord[1], gui);
-                    gui.mineDisplays[row + coord[0]][col + coord[1]].setIcon(mineDisplay[nMines]);
+                    gui.mineDisplays[row + coord[0]][col + coord[1]].setIcon(gui.mineDisplay[nMines]);
                     if (nMines > 0) {
-                        gui.mineDisplays[row + coord[0]][col + coord[1]].setIcon(mineDisplay[nMines]);
+                        // gui.mineDisplays[row + coord[0]][col + coord[1]].setIcon(gui.mineDisplay[nMines]);
                     }
                     else if (!( beenThereDoneThat.isMine(row + coord[0], col + coord[1])
                              || gui.champ.isMine(row + coord[0], col + coord[1])
@@ -205,7 +205,7 @@ public class GUI extends JPanel implements ActionListener {
         }
     }
 
-    private int countMines(int row, int col, GUI gui) {
+    private static int countMines(int row, int col, GUI gui) {
         final int [][] coordsToTest = {
             {-1, -1},
             {-1, 0},
@@ -248,16 +248,16 @@ public class GUI extends JPanel implements ActionListener {
 
             int numClient = input.readInt();
             System.out.println(numClient);
+            output.writeUTF("JOHN CENA");
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    // shamelessly stolen from Stack Overflow
     public static synchronized void playSound(final String name) {
         new Thread(new Runnable() {
-            // The wrapper thread is unnecessary, unless it blocks on the
-            // Clip finishing; see comments.
             public void run() {
                 try {
                     Clip clip = AudioSystem.getClip();
