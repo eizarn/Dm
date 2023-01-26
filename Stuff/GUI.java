@@ -31,6 +31,7 @@ public class GUI extends JPanel implements ActionListener {
     DataOutputStream output;
 
     ImageIcon mineDisplay_default;
+    ImageIcon mineDisplay_flag;
     ImageIcon mineDisplay_mine;
     ImageIcon [] mineDisplay = new ImageIcon [9];
 
@@ -38,6 +39,7 @@ public class GUI extends JPanel implements ActionListener {
         // MineDisplay icons
         try {
             this.mineDisplay_default = new ImageIcon(ImageIO.read(new File("img/default.bmp")));
+            this.mineDisplay_flag = new ImageIcon(ImageIO.read(new File("img/flag.bmp")));
             this.mineDisplay_mine = new ImageIcon(ImageIO.read(new File("img/mine.bmp")));
             this.mineDisplay[0] = new ImageIcon(ImageIO.read(new File("img/0.bmp")));
             this.mineDisplay[1] = new ImageIcon(ImageIO.read(new File("img/1.bmp")));
@@ -129,6 +131,7 @@ public class GUI extends JPanel implements ActionListener {
 
     private class MineDisplay extends JLabel {
         private boolean clicked = false;
+        private boolean flagged = false;
         MineDisplay(int row, int col, GUI gui) { this("", row, col, gui); }
         MineDisplay(String text, int row, int col, GUI gui) {
             super(text);
@@ -136,19 +139,33 @@ public class GUI extends JPanel implements ActionListener {
                 @Override
                 public void mousePressed(MouseEvent e) {
                     MineDisplay me = (MineDisplay) e.getSource();
-                    if (me.clicked == false) {
-                        if (gui.champ.isMine(row, col)) {
-                            setIcon(mineDisplay_mine);
-                            gameOver(false);
+                    if (SwingUtilities.isLeftMouseButton(e)) {
+                        if (me.clicked == false && me.flagged == false) {
+                            if (gui.champ.isMine(row, col)) {
+                                setIcon(mineDisplay_mine);
+                                gameOver(false);
+                            }
+                            else {
+                                int nMines = countMines(row, col, gui);
+                                setIcon(mineDisplay[nMines]);
+                                if (nMines == 0) {
+                                    // propagate
+                                    Champ beenThereDoneThat = new Champ();
+                                    beenThereDoneThat.emptyMines();
+                                    propagate(row, col, gui, beenThereDoneThat);
+                                }
+                            }
                         }
-                        else {
-                            int nMines = countMines(row, col, gui);
-                            setIcon(mineDisplay[nMines]);
-                            if (nMines == 0) {
-                                // propagate
-                                Champ beenThereDoneThat = new Champ();
-                                beenThereDoneThat.emptyMines();
-                                propagate_rec(row, col, gui, beenThereDoneThat);
+                    }
+                    else if (SwingUtilities.isRightMouseButton(e)) {
+                        if (!me.clicked) {
+                            if (me.flagged) {
+                                me.flagged = false;
+                                me.setIcon(mineDisplay_default);
+                            }
+                            else {
+                                me.flagged = true;
+                                me.setIcon(mineDisplay_flag);
                             }
                         }
                     }
@@ -156,7 +173,7 @@ public class GUI extends JPanel implements ActionListener {
             });
         }
 
-        private void propagate_rec(int row, int col, GUI gui, Champ beenThereDoneThat) {
+        private void propagate(int row, int col, GUI gui, Champ beenThereDoneThat) {
             beenThereDoneThat.setMine(row, col);
             final int [][] coordsToTest = {
                 {-1, -1},
@@ -178,7 +195,7 @@ public class GUI extends JPanel implements ActionListener {
                     else if (!( beenThereDoneThat.isMine(row + coord[0], col + coord[1])
                              || gui.champ.isMine(row + coord[0], col + coord[1])
                     )) {
-                        propagate_rec(row + coord[0], col + coord[1], gui, beenThereDoneThat);
+                        propagate(row + coord[0], col + coord[1], gui, beenThereDoneThat);
                     }
                 }
                 catch (Exception ex) {
