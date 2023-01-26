@@ -1,6 +1,9 @@
 package Stuff;
 
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 
 import java.awt.event.KeyEvent;
@@ -121,10 +124,10 @@ public class GUI extends JPanel implements ActionListener {
             }
         }
         champ.displayMines();
+        playSound("Dm");
     }
 
     private class MineDisplay extends JLabel {
-        private GUI gui;
         private boolean clicked = false;
         MineDisplay(int row, int col, GUI gui) { this("", row, col, gui); }
         MineDisplay(String text, int row, int col, GUI gui) {
@@ -136,44 +139,80 @@ public class GUI extends JPanel implements ActionListener {
                     if (me.clicked == false) {
                         if (gui.champ.isMine(row, col)) {
                             setIcon(mineDisplay_mine);
-                            // TODO: game over or sth
+                            gameOver(false);
                         }
                         else {
-                            int [][] coordsToTest = {
-                                {-1, -1},
-                                {-1, 0},
-                                {-1, 1},
-                                {0, -1},
-                                {0, 1},
-                                {1, -1},
-                                {1, 0},
-                                {1, 1}
-                            };
-                            int nMines = 0;
-                            for (int [] coord: coordsToTest) {
-                                try {
-                                    if (gui.champ.isMine(row + coord[0], col + coord[1])) {
-                                        nMines++;
-                                    }
-                                }
-                                catch (Exception ex) {
-                                    // do nothing
-                                }
-                            }
+                            int nMines = countMines(row, col, gui);
                             setIcon(mineDisplay[nMines]);
+                            if (nMines == 0) {
+                                // propagate
+                                Champ beenThereDoneThat = new Champ();
+                                beenThereDoneThat.emptyMines();
+                                propagate_rec(row, col, gui, beenThereDoneThat);
+                            }
                         }
                     }
                 }
             });
         }
 
-        public int getRow() {
-            return row;
+        private void propagate_rec(int row, int col, GUI gui, Champ beenThereDoneThat) {
+            beenThereDoneThat.setMine(row, col);
+            final int [][] coordsToTest = {
+                {-1, -1},
+                {-1, 0},
+                {-1, 1},
+                {0, -1},
+                {0, 1},
+                {1, -1},
+                {1, 0},
+                {1, 1}
+            };
+            for (int [] coord: coordsToTest) {
+                try {
+                    int nMines = countMines(row + coord[0], col + coord[1], gui);
+                    gui.mineDisplays[row + coord[0]][col + coord[1]].setIcon(mineDisplay[nMines]);
+                    if (nMines > 0) {
+                        gui.mineDisplays[row + coord[0]][col + coord[1]].setIcon(mineDisplay[nMines]);
+                    }
+                    else if (!( beenThereDoneThat.isMine(row + coord[0], col + coord[1])
+                             || gui.champ.isMine(row + coord[0], col + coord[1])
+                    )) {
+                        propagate_rec(row + coord[0], col + coord[1], gui, beenThereDoneThat);
+                    }
+                }
+                catch (Exception ex) {
+                    // do nothing
+                }
+            }
         }
-        
-        public int getCol() {
-            return col;
+    }
+
+    private int countMines(int row, int col, GUI gui) {
+        final int [][] coordsToTest = {
+            {-1, -1},
+            {-1, 0},
+            {-1, 1},
+            {0, -1},
+            {0, 1},
+            {1, -1},
+            {1, 0},
+            {1, 1}
+        };
+
+        int nMines = 0;
+        for (int [] coord: coordsToTest) {
+            try {
+                if (gui.champ.isMine(row + coord[0], col + coord[1])) {
+                    nMines++;
+                }
+            }
+            catch (Exception ex) {
+                // do nothing
+            }
         }
+
+        return nMines;
     }
 
     private class RestartButton extends JButton {
@@ -195,6 +234,36 @@ public class GUI extends JPanel implements ActionListener {
         }
         catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static synchronized void playSound(final String name) {
+        new Thread(new Runnable() {
+            // The wrapper thread is unnecessary, unless it blocks on the
+            // Clip finishing; see comments.
+            public void run() {
+                try {
+                    Clip clip = AudioSystem.getClip();
+                    AudioInputStream inputStream = AudioSystem.getAudioInputStream(
+                            new File("sfx/" + name + ".wav"));
+                    clip.open(inputStream);
+                    clip.start();
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }).start();
+    }
+
+    public void gameOver(boolean winner) {
+        if (winner) {
+            playSound("wahoo");
+            JOptionPane.showMessageDialog(new JFrame(), "Congratulations, you won!", "", 0, mineDisplay[1]);
+            // TODO: time, score
+        }
+        else {
+            playSound("reverb fart");
+            JOptionPane.showMessageDialog(new JFrame(), "We'll get them next time!", "", 0, mineDisplay_mine);
         }
     }
 }

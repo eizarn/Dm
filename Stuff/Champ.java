@@ -3,7 +3,7 @@ package Stuff;
 import java.util.Random;
 
 public class Champ {
-    final static int N_MINES = 30;
+    final static int N_MINES = 15;
     final static int HEIGHT = 10;
     final static int WIDTH = 10;
     private boolean [][] mines = new boolean[HEIGHT][WIDTH];
@@ -24,6 +24,11 @@ public class Champ {
             while (mines[y = rng.nextInt(HEIGHT)][x = rng.nextInt(WIDTH)]);
             mines[y][x] = true;
         }
+    }
+
+    public void setMine(int row, int col) { setMine(row, col, true); }
+    public void setMine(int row, int col, boolean isMine) {
+        mines[row][col] = isMine;
     }
 
     public void displayMines() {
